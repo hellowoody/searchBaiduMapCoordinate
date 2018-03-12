@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>坐标转换</title>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=1c5e91fb4f0b033764656c9366802a34"></script>
+	<!-- <script type="text/javascript" src="http://api.map.baidu.com/library/SearchInfoWindow/1.5/src/SearchInfoWindow_min.js"></script>
+	<script type="text/javascript" src="http://api.map.baidu.com/library/TextIconOverlay/1.2/src/TextIconOverlay_min.js"></script> -->
+	<script src="libs/baidumap/SearchInfoWindow_min.js"></script>
+	<script src="libs/baidumap/TextIconOverlay_min.js"></script>
+	<script src="libs/baidumap/MarkerClusterer.js"></script>
+	<script src="libs/coordtransform-master/index.js"></script>
+</head>
+<style type="text/css">
+html,body{
+	height: 100%;
+	margin: 0;
+}
+.left-wapper{
+	width: 40%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #F0ECEB;
+    /*padding-top:24px;
+    padding-left:16px;
+    padding-right:16px;
+    box-sizing: border-box;*/
+}
+.left-wapperbg{
+	width: 100%;
+	height: 100%;
+	overflow-y: scroll;
+	padding: 24px 18px; 
+    box-sizing: border-box;
+}
+.right-wapper{
+	width: 60%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    box-sizing: border-box;
+    overflow:hidden;
+}
+.search-btn {
+	appearance:button;
+    -moz-appearance:button; /* Firefox */
+    -webkit-appearance:button; /* Safari 和 Chrome */
+    box-sizing:border-box;
+    -moz-box-sizing:border-box; /* Firefox */
+    -webkit-box-sizing:border-box; /* Safari */;
+    padding: 0;
+    width: 60px;
+    height: 30px;
+}
+</style>
+<body>
+	<div class="left-wapper">
+		<div class="left-wapperbg">
+			<div style="display: block;margin-bottom: 20px;">
+                <input type="button" value="查询" onclick="searchByStationName();" class="search-btn"/>
+                <input type="button" value="重置" onclick="reset();" class="search-btn" style="background-color: #fafafa" />
+            </div>
+			要查询的地址：<input id="text_" type="text"  style="display: block;width: 100%;height: 50%;margin-bottom: 16px;"/>
+			查询结果<br>
+			百度经纬度：<div id="res_baidu" style="color: #333;font-size: 12px;"></div><hr>
+			wgs84经纬度：<div id="res_wgs" style="color: #333;font-size: 12px;"></div><hr>
+        </div>
+	</div>
+	<div id="mapId" class="right-wapper" ></div>
+</body>
+</html>
+<script type="text/javascript">
+;(function(window,undefined){
+	var map = new BMap.Map("mapId");
+    map.centerAndZoom("天津", 12);
+    map.enableScrollWheelZoom();    //启用滚轮放大缩小，默认禁用
+    map.enableContinuousZoom();    //启用地图惯性拖拽，默认禁用
+
+    map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
+    map.addControl(new BMap.OverviewMapControl()); //添加默认缩略地图控件
+    map.addControl(new BMap.OverviewMapControl({ isOpen: true, anchor: BMAP_ANCHOR_BOTTOM_RIGHT }));   //右下角，打开
+
+    var localSearch = new BMap.LocalSearch(map);
+    localSearch.enableAutoViewport(); //允许自动调节窗体大小
+    var baidupos = "";
+    var wgs84pos = "";
+    map.clearOverlays();//清空原来的标注
+    window.map = map;
+    window.localSearch = localSearch;
+    window.baidupos = baidupos;
+    window.wgs84pos = wgs84pos;
+})(window);
+createMark = function(node,info_html){
+	var _marker = new BMap.Marker(new BMap.Point(node.lng,node.lat));
+	_marker.addEventListener("click",function(e){
+		this.openInfoWindow(new BMap.InfoWindow("<p style='font-size:14px;'>" + info_html + "</p>")); 
+	});
+	_marker.addEventListener("mouseover",function(e){
+		this.setTitle("位于："+node.lng+","+node.lat);
+	});
+	return _marker;
+}
+function searchByStationName() {
+    // map.clearOverlays();//清空原来的标注
+    var keyword = document.getElementById("text_").value;
+    var arrTens = []; //每10个一组
+    localSearch.setSearchCompleteCallback(function (searchResults) {
+    	// console.log("searchResults===>>"+JSON.stringify(searchResults));
+    	baidupos = baidupos == "" ? "" : baidupos;
+    	wgs84pos = wgs84pos == "" ? "" : wgs84pos;
+    	var marks = new Array();
+    	for(j = 0,len=searchResults.length; j < len; j++) {
+    		var searchResult = searchResults[j];
+    		// console.log("searchResult one===>>"+JSON.stringify(searchResult));
+    		var poi = searchResult.getPoi(0);
+    		if(poi != null)
+    		{
+    			baidupos  += searchResult['keyword']+" : "+poi.point.lng + "," + poi.point.lat + "<br/>";
+		        map.centerAndZoom(poi.point, 13);
+				var content = searchResult['keyword'] + "<br/><br/>经度：" + poi.point.lng + "<br/>纬度：" + poi.point.lat;
+		        // var infoWindow = new BMap.InfoWindow("<p style='font-size:14px;'>" + content + "</p>");
+		        // marker.addEventListener("click", function () { this.openInfoWindow(infoWindow); });
+		       	//----------------
+		       	// var marker = new BMap.Marker(new BMap.Point(poi.point.lng, poi.point.lat));  // 创建标注，为要查询的地方对应的经纬度
+		        // map.addOverlay(marker);
+		        // marks.push(this.createMark(poi.point,content));
+
+		        var bd09togcj02 = coordtransform.bd09togcj02(poi.point.lng ,poi.point.lat );
+		        // console.log(JSON.stringify(bd09togcj02));
+		        var gcj02towgs84 = coordtransform.gcj02towgs84(bd09togcj02[0], bd09togcj02[1]);
+		        // console.log(gcj02towgs84);
+		        wgs84pos  += searchResult['keyword']+" : "+gcj02towgs84[0] + "," + gcj02towgs84[1] + "<br/>";
+    		}
+    		else{
+    			baidupos  += searchResult['keyword']+" : "+ "<br/>";
+    			wgs84pos  += searchResult['keyword']+" : "+ "<br/>";
+    		}
+	        
+		}
+		// new BMapLib.MarkerClusterer(window.map,{markers:marks});
+		document.getElementById("res_baidu").innerHTML = baidupos;
+		document.getElementById("res_wgs").innerHTML = wgs84pos;
+		this.mysearch();
+    });
+
+
+    mysearch = function(){
+    	var delFirstArray = arrTens.shift();
+    	if(delFirstArray != null)
+    	{
+    		localSearch.search(delFirstArray);
+    	}
+    }
+
+    if(keyword != undefined && keyword != null && keyword != "")
+    {
+    	var keywords = keyword.split(",");
+    	for(var i=0,len=keywords.length;i<len;i+=10){
+		   arrTens.push(keywords.slice(i,i+10));
+		}
+		this.mysearch();
+	}else
+	{
+		localSearch.search(['南京路235号河川大厦A座29','解放南路281号']);
+	}
+} 
+function reset()
+{
+    location.reload();
+}
+</script>
