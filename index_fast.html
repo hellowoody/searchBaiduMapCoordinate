@@ -143,7 +143,7 @@ function searchByStationName() {
 		// new BMapLib.MarkerClusterer(window.map,{markers:marks});
 		document.getElementById("res_baidu").innerHTML = baidupos;
 		document.getElementById("res_wgs").innerHTML = wgs84pos;
-		this.mysearch();
+        setTimeout(this.mysearch(),5000);
     });
 
 
@@ -151,6 +151,7 @@ function searchByStationName() {
     	var delFirstArray = arrTens.shift();
     	if(delFirstArray != null)
     	{
+            console.log(delFirstArray)
     		localSearch.search(delFirstArray);
     	}
     }
@@ -158,13 +159,13 @@ function searchByStationName() {
     if(keyword != undefined && keyword != null && keyword != "")
     {
     	var keywords = keyword.split(",");
-    	for(var i=0,len=keywords.length;i<len;i+=10){
-		   arrTens.push(keywords.slice(i,i+10));
+    	for(var i=0,len=keywords.length;i<len;i+=5){
+		   arrTens.push(keywords.slice(i,i+5));
 		}
 		this.mysearch();
 	}else
 	{
-		localSearch.search(['南京路235号河川大厦A座29','解放南路281号']);
+		localSearch.search([ "和平区大理道三友别墅1号1534室", "和平区西康路72-74号云翔大厦13层L室", "和平区卫津路149号云琅新居A座1门101", "新华大厦605", "天津市和平区郑州道18号港澳大厦4楼", "西康路72-74", "天津市和平区南京路河川大厦A座四楼", "天津市和平区拉萨道16号和平电子商务大厦4094号", "和平区和平路119号"]);
 	}
 } 
 function reset()

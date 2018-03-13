@@ -143,26 +143,27 @@ function searchByStationName() {
 		new BMapLib.MarkerClusterer(window.map,{markers:marks});
 		document.getElementById("res_baidu").innerHTML = baidupos;
 		document.getElementById("res_wgs").innerHTML = wgs84pos;
-		this.mysearch();
+		setTimeout(this.mysearch(),5000);
     });
 
 
     mysearch = function(){
-    	var delFirstArray = arrTens.shift();
-    	if(delFirstArray != null)
-    	{
-    		localSearch.search(delFirstArray);
-    	}
+        var delFirstArray = arrTens.shift();
+        if(delFirstArray != null)
+        {
+            console.log(delFirstArray)
+            localSearch.search(delFirstArray);
+        }
     }
 
     if(keyword != undefined && keyword != null && keyword != "")
     {
-    	var keywords = keyword.split(",");
-    	for(var i=0,len=keywords.length;i<len;i+=10){
-		   arrTens.push(keywords.slice(i,i+10));
-		}
-		this.mysearch();
-	}else
+        var keywords = keyword.split(",");
+        for(var i=0,len=keywords.length;i<len;i+=5){
+           arrTens.push(keywords.slice(i,i+5));
+        }
+        this.mysearch();
+    }else
 	{
 		localSearch.search(['南京路235号河川大厦A座29','解放南路281号']);
 	}
